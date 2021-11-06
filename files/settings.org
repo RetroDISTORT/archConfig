@@ -1,0 +1,150 @@
+* Retro's emacs config
+** Theme
+#+BEGIN_SRC emacs-lisp
+(set-foreground-color "white")
+#+END_SRC
+
+** Melpa
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+                         ("melpa" . "https://melpa.org/packages/")
+                         ("org" . "http://orgmode.org/elpa/")))
+(package-initialize)
+#+END_SRC
+
+** Babel
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages '((python . t)
+			     (C . t)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+(eval-after-load 'gnutls
+  '(add-to-list 'gnutls-trustfiles "/etc/ssl/cert.pem"))
+(unless (package-installed-p 'async)
+  (package-refresh-contents)
+  (package-install 'async))
+(unless (package-installed-p 'quelpa)
+  (with-temp-buffer
+    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+    (eval-buffer)
+    (quelpa-self-upgrade)))
+(let ((path (concat (file-name-as-directory (concat user-emacs-directory "quelpa")) "melpa")))
+  (if (not (file-exists-p path))
+      (make-directory path))
+  (let ((path (concat (file-name-as-directory path) "recipes")))
+    (if (not (file-exists-p path))
+	(make-directory path))))
+(setq use-package-always-ensure t) ; docs say this is deprecated but things break when it's not included
+
+(quelpa
+ '(quelpa-use-package
+   :fetcher git
+   :url "https://github.com/quelpa/quelpa-use-package.git"))
+(require 'quelpa-use-package)
+
+(quelpa
+ '(quelpa-use-package
+   :fetcher git
+   :url "https://github.com/quelpa/quelpa-use-package.git"))
+(require 'quelpa-use-package)
+#+END_SRC
+
+** Magit
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+  :config
+  (setq magit-restricted-git-config-tag "magit.restricted-branches")
+  (setq magit-default-restricted-branches '("main" "master"))
+
+  (defun magit-get-restricted-branches ()
+    (sort (split-string (magit-git-string "config" magit-restricted-git-config-tag) " ")
+	  (lambda (a b) 'string<)))
+
+  (defun magit-restricted-branch-setup ()
+    (setq magit-git-debug-old magit-git-debug)
+    (setq magit-git-debug t)
+    (when (not (magit-git-success "config" magit-restricted-git-config-tag))
+      (magit-call-git "config" magit-restricted-git-config-tag (string-join magit-default-restricted-branches " ")))
+    (setq magit-git-debug magit-git-debug-old))
+  (advice-add 'magit-dispatch :before #'magit-restricted-branch-setup)
+
+  (defun magit-branch-check ()
+    (member (magit-get-current-branch) (magit-get-restricted-branches)))
+
+  (defun magit-commit-branch-check (&optional args)
+    (magit-restricted-branch-setup)
+    (if (magit-branch-check)
+	(progn
+	  (magit-commit-assert args)
+	  (let ((new-branch
+		 (magit-read-string-ns
+		  (format "%s is a restricted branch! Commit changes to new branch"
+			  (magit-get-current-branch)))))
+	    (if (or (string= new-branch "main"))
+		(user-error "Error: Tried to commit arround a restricted branch!")
+	      (progn
+		(magit-stash-save "(auto) moving from restricted branch" t t nil t)
+		(magit-branch-and-checkout new-branch (magit-get-current-branch))
+		(magit-call-git "stash" "pop")
+		(magit-stage-modified)
+		))))))
+  (advice-add 'magit-commit-create :before #'magit-commit-branch-check)
+
+  (defun magit-push-branch-check (&optional args)
+    (magit-restricted-branch-setup)
+    (if (magit-branch-check)
+	(user-error (format "Error: Not allowed to push to %s! If commits are pending, you may need to checkout and cherry-pick." (magit-get-current-branch)))))
+  (advice-add 'magit-push-current-to-pushremote :before #'magit-push-branch-check)
+
+  (defun magit-restricted-view ()
+    (interactive)
+    (message "Restricted branches: %s" (string-join (magit-get-restricted-branches) " ")))
+
+  (defun magit-restricted-add ()
+    (interactive)
+    (let ((restricted-branches (magit-get-restricted-branches))
+	  (target-branch (magit-read-branch "Branch to restrict")))
+      (if (not (member target-branch restricted-branches))
+	  (magit-call-git "config" magit-restricted-git-config-tag
+			  (format "%s %s" (string-join restricted-branches " ") target-branch)))))
+
+  (defun magit-restricted-remove ()
+    (interactive)
+    (let* ((restricted-branches (magit-get-restricted-branches))
+	   (current-branch (magit-get-current-branch))
+	   (target-branch (magit-completing-read "Branch to derestrict" restricted-branches
+						 nil t nil nil (when (member current-branch restricted-branches) current-branch))))
+      (magit-call-git "config" magit-restricted-git-config-tag
+		      (format "%s" (string-join (remove target-branch restricted-branches) " ")))))
+
+  (transient-define-prefix magit-restricted ()
+    "View or modify restriction git attributes"
+    ["Branches"
+     ("v" "View Restrictions"     magit-restricted-view)
+     ("a" "Add a Restriction"    magit-restricted-add)
+     ("r" "Remove a Restriction" magit-restricted-remove)]
+    (interactive)
+    (transient-setup 'magit-restricted))
+
+  (transient-append-suffix 'magit-dispatch "!"
+    '("=" "Restrict" magit-restricted))
+  
+  :bind
+  (:map magit-mode-map ("=" . magit-restricted)))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(quelpa-use-package use-package bind-key quelpa async telega magit vterm rust-mode)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+ #+END_SRC
