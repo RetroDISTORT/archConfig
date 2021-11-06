@@ -1,0 +1,22 @@
+#!/bin/sh
+
+alias \
+      csu="csud"\
+      csua="ssh daniel95@albany.cs.colostate.edu"\
+      csub="ssh daniel95@baton-rouge.cs.colostate.edu"\
+      csuc="ssh daniel95@carson-city.cs.colostate.edu"\
+      csud="ssh daniel95@denver.cs.colostate.edu"\
+      csue="ssh daniel95@jefferson-city.cs.colostate.edu"\
+      csuf="ssh daniel95@frankfort.cs.colostate.edu"\
+      csug="ssh daniel95@honolulu.cs.colostate.edu"\
+      csuh="ssh daniel95@harrisburg.cs.colostate.edu"\
+      csui="ssh daniel95@des-moines.cs.colostate.edu"\
+      sourcebash="source ~/.bashrc"\
+      aliasrc="emacs ~/.config/aliasrc"\
+      i3config="sudo emacs /home/retro/.config/i3/config"\
+      telegram="telegram-desktop"\
+      esp32="sudo rshell --buffer-size=200 -p /dev/ttyUSB0"\
+      esp32old="sudo rshell -p /dev/ttyUSB0"\
+      receiveSCP="scp -r daniel95@harrisburg.cs.colostate.edu:/s/bach/j/under/daniel95/fileTransfer/ ~/"\
+      sendSCP="scp -r ~/fileTransfer daniel95@harrisburg.cs.colostate.edu:/s/bach/j/under/daniel95/"\
+      picomconfig="sudo emacs /etc/xdg/picom.conf"\
