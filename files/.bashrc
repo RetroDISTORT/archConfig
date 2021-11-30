@@ -40,3 +40,5 @@ export NVM_DIR="$HOME/.nvm"
 export CS414_USE_DATABASE_TUNNEL=true
 export CS414_DB_USER="daniel95"
 export CS414_DB_PWD="832092374"
+
+neofetch

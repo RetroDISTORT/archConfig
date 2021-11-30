@@ -1,16 +1,65 @@
 * Retro's emacs config
+
+** Automatic Package Installer
+   Also includes melpa
+#+BEGIN_SRC emacs-lisp
+    (require 'package)
+    (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+			     ("melpa" . "https://melpa.org/packages/")
+			     ("org" . "http://orgmode.org/elpa/")))
+    (package-initialize)
+
+  (eval-after-load 'gnutls
+    '(add-to-list 'gnutls-trustfiles "/etc/ssl/cert.pem"))
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'async) ; required somewhat recently
+    (package-install 'use-package))
+  (eval-when-compile
+    (require 'async)
+    (require 'use-package))
+  (setq use-package-always-ensure t) ; docs say this is deprecated but things break when it's not included
+
+#+END_SRC
+   
 ** Theme
 #+BEGIN_SRC emacs-lisp
-(set-foreground-color "white")
+  (set-foreground-color "white")
 #+END_SRC
 
-** Melpa
+** Backup and Autosave Files
 #+BEGIN_SRC emacs-lisp
-(require 'package)
-(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")
-                         ("org" . "http://orgmode.org/elpa/")))
-(package-initialize)
+  (setq backup-directory-alist `(("." . "~/.saves")))
+#+END_SRC   
+
+** Programming mode settings
+#+BEGIN_SRC emacs-lisp
+   (use-package nlinum
+     :hook  (prog-mode . nlinum-mode)
+     :init  (setq nlinum-highlight-current-line t))
+#+END_SRC
+
+** Vterm
+#+BEGIN_SRC emacs-lisp
+   (use-package vterm)
+#+END_SRC   
+
+** Dashboard Setup
+#+BEGIN_SRC emacs-lisp
+  (use-package dashboard
+    :ensure t
+    :init 
+	    (setq dashboard-items '((recents  . 5)))
+	    (setq dashboard-set-navigator t)
+	    (setq dashboard-startup-banner "~/Documents/images/chronoTrigger.png")
+	    (setq dashboard-banner-logo-title "T H E R E  I S  A N  E M A C S  C O M M A N D  T O  D O  T H A T")
+    :config
+    (dashboard-setup-startup-hook))
+#+END_SRC
+
+** Text mode
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'text-mode-hook 'column-number-mode)
 #+END_SRC
 
 ** Babel
@@ -18,38 +67,6 @@
 (org-babel-do-load-languages
  'org-babel-load-languages '((python . t)
 			     (C . t)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-(eval-after-load 'gnutls
-  '(add-to-list 'gnutls-trustfiles "/etc/ssl/cert.pem"))
-(unless (package-installed-p 'async)
-  (package-refresh-contents)
-  (package-install 'async))
-(unless (package-installed-p 'quelpa)
-  (with-temp-buffer
-    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
-    (eval-buffer)
-    (quelpa-self-upgrade)))
-(let ((path (concat (file-name-as-directory (concat user-emacs-directory "quelpa")) "melpa")))
-  (if (not (file-exists-p path))
-      (make-directory path))
-  (let ((path (concat (file-name-as-directory path) "recipes")))
-    (if (not (file-exists-p path))
-	(make-directory path))))
-(setq use-package-always-ensure t) ; docs say this is deprecated but things break when it's not included
-
-(quelpa
- '(quelpa-use-package
-   :fetcher git
-   :url "https://github.com/quelpa/quelpa-use-package.git"))
-(require 'quelpa-use-package)
-
-(quelpa
- '(quelpa-use-package
-   :fetcher git
-   :url "https://github.com/quelpa/quelpa-use-package.git"))
-(require 'quelpa-use-package)
 #+END_SRC
 
 ** Magit
