@@ -11,6 +11,7 @@ alias \
       csug="ssh daniel95@honolulu.cs.colostate.edu"\
       csuh="ssh daniel95@harrisburg.cs.colostate.edu"\
       csui="ssh daniel95@des-moines.cs.colostate.edu"\
+      csux="ssh -X daniel95@des-moines.cs.colostate.edu"\
       sourcebash="source ~/.bashrc"\
       aliasrc="emacs ~/.config/aliasrc"\
       i3config="sudo emacs /home/retro/.config/i3/config"\
@@ -20,3 +21,6 @@ alias \
       receiveSCP="scp -r daniel95@harrisburg.cs.colostate.edu:/s/bach/j/under/daniel95/fileTransfer/ ~/"\
       sendSCP="scp -r ~/fileTransfer daniel95@harrisburg.cs.colostate.edu:/s/bach/j/under/daniel95/"\
       picomconfig="sudo emacs /etc/xdg/picom.conf"\
+      hdmiSplit="xrandr --output eDP-1 --auto --output HDMI-1 --auto --right-of eDP-1"\
+      hdmiMirror="xrandr --output eDP-1 --auto --output HDMI-1 --auto --same-as eDP-1"\
+      hdmiOff="xrandr --output eDP-1 --auto --output HDMI-1 --off"\
